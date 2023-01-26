@@ -83,9 +83,9 @@ func runHttpServer() {
 
 	svr.http = router
 
-	router.GET("/grainJars", getGrainJars)
-	router.GET("/grainJar/:id", getGrainJar)
-	router.POST("/grainJar", postGrainJar)
+	router.GET("/grainjars", getGrainJars)
+	router.GET("/grainjar/:id", getGrainJar)
+	router.POST("/grainjar", postGrainJar)
 
 	router.POST("/sporesyringe", postSporeSyringe)
 	_ = router.Run("localhost:8080")
