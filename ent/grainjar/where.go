@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -223,33 +222,6 @@ func HarvestDateIsNil() predicate.GrainJar {
 // HarvestDateNotNil applies the NotNil predicate on the "HarvestDate" field.
 func HarvestDateNotNil() predicate.GrainJar {
 	return predicate.GrainJar(sql.FieldNotNull(FieldHarvestDate))
-}
-
-// HasSporeSyringe applies the HasEdge predicate on the "sporeSyringe" edge.
-func HasSporeSyringe() predicate.GrainJar {
-	return predicate.GrainJar(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SporeSyringeTable, SporeSyringeColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSporeSyringeWith applies the HasEdge predicate on the "sporeSyringe" edge with a given conditions (other predicates).
-func HasSporeSyringeWith(preds ...predicate.SporeSyringe) predicate.GrainJar {
-	return predicate.GrainJar(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SporeSyringeInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SporeSyringeTable, SporeSyringeColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -242,22 +242,6 @@ func (c *GrainJarClient) GetX(ctx context.Context, id int) *GrainJar {
 	return obj
 }
 
-// QuerySporeSyringe queries the sporeSyringe edge of a GrainJar.
-func (c *GrainJarClient) QuerySporeSyringe(gj *GrainJar) *SporeSyringeQuery {
-	query := (&SporeSyringeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := gj.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(grainjar.Table, grainjar.FieldID, id),
-			sqlgraph.To(sporesyringe.Table, sporesyringe.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, grainjar.SporeSyringeTable, grainjar.SporeSyringeColumn),
-		)
-		fromV = sqlgraph.Neighbors(gj.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *GrainJarClient) Hooks() []Hook {
 	return c.hooks.GrainJar
@@ -374,6 +358,22 @@ func (c *SporeSyringeClient) GetX(ctx context.Context, id int) *SporeSyringe {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryGrainJar queries the grainJar edge of a SporeSyringe.
+func (c *SporeSyringeClient) QueryGrainJar(ss *SporeSyringe) *GrainJarQuery {
+	query := (&GrainJarClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ss.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sporesyringe.Table, sporesyringe.FieldID, id),
+			sqlgraph.To(grainjar.Table, grainjar.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sporesyringe.GrainJarTable, sporesyringe.GrainJarColumn),
+		)
+		fromV = sqlgraph.Neighbors(ss.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

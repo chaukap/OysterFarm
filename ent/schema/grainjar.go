@@ -5,7 +5,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/edge"
 )
 
 // GrainJar holds the schema definition for the GrainJar entity.
@@ -27,7 +26,5 @@ func (GrainJar) Fields() []ent.Field {
 
 // Edges of the GrainJar.
 func (GrainJar) Edges() []ent.Edge {
-    return []ent.Edge{
-        edge.To("sporeSyringe", SporeSyringe.Type),
-    }
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"example/myco-api/ent"
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 	"log"
 	"strconv"
 
@@ -120,12 +121,22 @@ func getGrainJar(c *gin.Context) {
 func postGrainJar(c *gin.Context) {
 	type PostParam struct {
 		Grain string `form:"grain" json:"grain" valid:"Required; MaxSize(50)"`
+		SporeSyringe string `form:"spore_syringe" json:"spore_syringe" valid:"Required"`
 	}
 	var form PostParam
 
 	httpCode, errCode := BindAndValid(c, &form)
 	if errCode != 200 {
 		ResponseJSON(c, httpCode, errCode, "invalid param", nil)
+		return
+	}
+
+	id, _ := strconv.Atoi(form.SporeSyringe)
+	sporeSyringe, err := svr.db.SporeSyringe.Query().
+		Where(sporesyringe.ID(id)).
+		First(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "Couldn't find spore syringe: "+err.Error(), nil)
 		return
 	}
 
@@ -138,6 +149,16 @@ func postGrainJar(c *gin.Context) {
 		return
 	}
 
+	_, newerr := svr.db.SporeSyringe.
+		Update().
+		AddGrainJar(grainJar).
+		Where(sporesyringe.ID(sporeSyringe.ID)).
+		Save(context.Background())
+	if newerr != nil {
+		ResponseJSON(c, http.StatusOK, 500, "create grain jar failed: "+newerr.Error(), nil)
+		return
+	}
+	
 	type ResponseData struct {
 		ID               uint64 `json:"id"`
 		Grain            string `json:"grain"`

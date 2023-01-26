@@ -32,19 +32,16 @@ const (
 // GrainJarMutation represents an operation that mutates the GrainJar nodes in the graph.
 type GrainJarMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	_InnoculationDate   *time.Time
-	_Grain              *string
-	_HarvestDate        *time.Time
-	clearedFields       map[string]struct{}
-	sporeSyringe        map[int]struct{}
-	removedsporeSyringe map[int]struct{}
-	clearedsporeSyringe bool
-	done                bool
-	oldValue            func(context.Context) (*GrainJar, error)
-	predicates          []predicate.GrainJar
+	op                Op
+	typ               string
+	id                *int
+	_InnoculationDate *time.Time
+	_Grain            *string
+	_HarvestDate      *time.Time
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*GrainJar, error)
+	predicates        []predicate.GrainJar
 }
 
 var _ ent.Mutation = (*GrainJarMutation)(nil)
@@ -266,60 +263,6 @@ func (m *GrainJarMutation) ResetHarvestDate() {
 	delete(m.clearedFields, grainjar.FieldHarvestDate)
 }
 
-// AddSporeSyringeIDs adds the "sporeSyringe" edge to the SporeSyringe entity by ids.
-func (m *GrainJarMutation) AddSporeSyringeIDs(ids ...int) {
-	if m.sporeSyringe == nil {
-		m.sporeSyringe = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.sporeSyringe[ids[i]] = struct{}{}
-	}
-}
-
-// ClearSporeSyringe clears the "sporeSyringe" edge to the SporeSyringe entity.
-func (m *GrainJarMutation) ClearSporeSyringe() {
-	m.clearedsporeSyringe = true
-}
-
-// SporeSyringeCleared reports if the "sporeSyringe" edge to the SporeSyringe entity was cleared.
-func (m *GrainJarMutation) SporeSyringeCleared() bool {
-	return m.clearedsporeSyringe
-}
-
-// RemoveSporeSyringeIDs removes the "sporeSyringe" edge to the SporeSyringe entity by IDs.
-func (m *GrainJarMutation) RemoveSporeSyringeIDs(ids ...int) {
-	if m.removedsporeSyringe == nil {
-		m.removedsporeSyringe = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.sporeSyringe, ids[i])
-		m.removedsporeSyringe[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedSporeSyringe returns the removed IDs of the "sporeSyringe" edge to the SporeSyringe entity.
-func (m *GrainJarMutation) RemovedSporeSyringeIDs() (ids []int) {
-	for id := range m.removedsporeSyringe {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// SporeSyringeIDs returns the "sporeSyringe" edge IDs in the mutation.
-func (m *GrainJarMutation) SporeSyringeIDs() (ids []int) {
-	for id := range m.sporeSyringe {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetSporeSyringe resets all changes to the "sporeSyringe" edge.
-func (m *GrainJarMutation) ResetSporeSyringe() {
-	m.sporeSyringe = nil
-	m.clearedsporeSyringe = false
-	m.removedsporeSyringe = nil
-}
-
 // Where appends a list predicates to the GrainJarMutation builder.
 func (m *GrainJarMutation) Where(ps ...predicate.GrainJar) {
 	m.predicates = append(m.predicates, ps...)
@@ -496,101 +439,68 @@ func (m *GrainJarMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GrainJarMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.sporeSyringe != nil {
-		edges = append(edges, grainjar.EdgeSporeSyringe)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *GrainJarMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case grainjar.EdgeSporeSyringe:
-		ids := make([]ent.Value, 0, len(m.sporeSyringe))
-		for id := range m.sporeSyringe {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GrainJarMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedsporeSyringe != nil {
-		edges = append(edges, grainjar.EdgeSporeSyringe)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *GrainJarMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case grainjar.EdgeSporeSyringe:
-		ids := make([]ent.Value, 0, len(m.removedsporeSyringe))
-		for id := range m.removedsporeSyringe {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GrainJarMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedsporeSyringe {
-		edges = append(edges, grainjar.EdgeSporeSyringe)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *GrainJarMutation) EdgeCleared(name string) bool {
-	switch name {
-	case grainjar.EdgeSporeSyringe:
-		return m.clearedsporeSyringe
-	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *GrainJarMutation) ClearEdge(name string) error {
-	switch name {
-	}
 	return fmt.Errorf("unknown GrainJar unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *GrainJarMutation) ResetEdge(name string) error {
-	switch name {
-	case grainjar.EdgeSporeSyringe:
-		m.ResetSporeSyringe()
-		return nil
-	}
 	return fmt.Errorf("unknown GrainJar edge %s", name)
 }
 
 // SporeSyringeMutation represents an operation that mutates the SporeSyringe nodes in the graph.
 type SporeSyringeMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	_RecievedDate *time.Time
-	_Species      *string
-	_Supplier     *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*SporeSyringe, error)
-	predicates    []predicate.SporeSyringe
+	op              Op
+	typ             string
+	id              *int
+	_RecievedDate   *time.Time
+	_Species        *string
+	_Supplier       *string
+	clearedFields   map[string]struct{}
+	grainJar        map[int]struct{}
+	removedgrainJar map[int]struct{}
+	clearedgrainJar bool
+	done            bool
+	oldValue        func(context.Context) (*SporeSyringe, error)
+	predicates      []predicate.SporeSyringe
 }
 
 var _ ent.Mutation = (*SporeSyringeMutation)(nil)
@@ -799,6 +709,60 @@ func (m *SporeSyringeMutation) ResetSupplier() {
 	m._Supplier = nil
 }
 
+// AddGrainJarIDs adds the "grainJar" edge to the GrainJar entity by ids.
+func (m *SporeSyringeMutation) AddGrainJarIDs(ids ...int) {
+	if m.grainJar == nil {
+		m.grainJar = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.grainJar[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGrainJar clears the "grainJar" edge to the GrainJar entity.
+func (m *SporeSyringeMutation) ClearGrainJar() {
+	m.clearedgrainJar = true
+}
+
+// GrainJarCleared reports if the "grainJar" edge to the GrainJar entity was cleared.
+func (m *SporeSyringeMutation) GrainJarCleared() bool {
+	return m.clearedgrainJar
+}
+
+// RemoveGrainJarIDs removes the "grainJar" edge to the GrainJar entity by IDs.
+func (m *SporeSyringeMutation) RemoveGrainJarIDs(ids ...int) {
+	if m.removedgrainJar == nil {
+		m.removedgrainJar = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.grainJar, ids[i])
+		m.removedgrainJar[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGrainJar returns the removed IDs of the "grainJar" edge to the GrainJar entity.
+func (m *SporeSyringeMutation) RemovedGrainJarIDs() (ids []int) {
+	for id := range m.removedgrainJar {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// GrainJarIDs returns the "grainJar" edge IDs in the mutation.
+func (m *SporeSyringeMutation) GrainJarIDs() (ids []int) {
+	for id := range m.grainJar {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGrainJar resets all changes to the "grainJar" edge.
+func (m *SporeSyringeMutation) ResetGrainJar() {
+	m.grainJar = nil
+	m.clearedgrainJar = false
+	m.removedgrainJar = nil
+}
+
 // Where appends a list predicates to the SporeSyringeMutation builder.
 func (m *SporeSyringeMutation) Where(ps ...predicate.SporeSyringe) {
 	m.predicates = append(m.predicates, ps...)
@@ -966,48 +930,84 @@ func (m *SporeSyringeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SporeSyringeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.grainJar != nil {
+		edges = append(edges, sporesyringe.EdgeGrainJar)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *SporeSyringeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case sporesyringe.EdgeGrainJar:
+		ids := make([]ent.Value, 0, len(m.grainJar))
+		for id := range m.grainJar {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SporeSyringeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedgrainJar != nil {
+		edges = append(edges, sporesyringe.EdgeGrainJar)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *SporeSyringeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case sporesyringe.EdgeGrainJar:
+		ids := make([]ent.Value, 0, len(m.removedgrainJar))
+		for id := range m.removedgrainJar {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SporeSyringeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedgrainJar {
+		edges = append(edges, sporesyringe.EdgeGrainJar)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *SporeSyringeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case sporesyringe.EdgeGrainJar:
+		return m.clearedgrainJar
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *SporeSyringeMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown SporeSyringe unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *SporeSyringeMutation) ResetEdge(name string) error {
+	switch name {
+	case sporesyringe.EdgeGrainJar:
+		m.ResetGrainJar()
+		return nil
+	}
 	return fmt.Errorf("unknown SporeSyringe edge %s", name)
 }

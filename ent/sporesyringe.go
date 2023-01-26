@@ -21,8 +21,28 @@ type SporeSyringe struct {
 	// Species holds the value of the "Species" field.
 	Species string `json:"Species,omitempty"`
 	// Supplier holds the value of the "Supplier" field.
-	Supplier                string `json:"Supplier,omitempty"`
-	grain_jar_spore_syringe *int
+	Supplier string `json:"Supplier,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SporeSyringeQuery when eager-loading is set.
+	Edges SporeSyringeEdges `json:"edges"`
+}
+
+// SporeSyringeEdges holds the relations/edges for other nodes in the graph.
+type SporeSyringeEdges struct {
+	// GrainJar holds the value of the grainJar edge.
+	GrainJar []*GrainJar `json:"grainJar,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// GrainJarOrErr returns the GrainJar value or an error if the edge
+// was not loaded in eager-loading.
+func (e SporeSyringeEdges) GrainJarOrErr() ([]*GrainJar, error) {
+	if e.loadedTypes[0] {
+		return e.GrainJar, nil
+	}
+	return nil, &NotLoadedError{edge: "grainJar"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,8 +56,6 @@ func (*SporeSyringe) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case sporesyringe.FieldRecievedDate:
 			values[i] = new(sql.NullTime)
-		case sporesyringe.ForeignKeys[0]: // grain_jar_spore_syringe
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type SporeSyringe", columns[i])
 		}
@@ -77,16 +95,14 @@ func (ss *SporeSyringe) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ss.Supplier = value.String
 			}
-		case sporesyringe.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field grain_jar_spore_syringe", value)
-			} else if value.Valid {
-				ss.grain_jar_spore_syringe = new(int)
-				*ss.grain_jar_spore_syringe = int(value.Int64)
-			}
 		}
 	}
 	return nil
+}
+
+// QueryGrainJar queries the "grainJar" edge of the SporeSyringe entity.
+func (ss *SporeSyringe) QueryGrainJar() *GrainJarQuery {
+	return NewSporeSyringeClient(ss.config).QueryGrainJar(ss)
 }
 
 // Update returns a builder for updating this SporeSyringe.

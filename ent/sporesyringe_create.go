@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"errors"
+	"example/myco-api/ent/grainjar"
 	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"time"
@@ -60,6 +61,21 @@ func (ssc *SporeSyringeCreate) SetNillableSupplier(s *string) *SporeSyringeCreat
 		ssc.SetSupplier(*s)
 	}
 	return ssc
+}
+
+// AddGrainJarIDs adds the "grainJar" edge to the GrainJar entity by IDs.
+func (ssc *SporeSyringeCreate) AddGrainJarIDs(ids ...int) *SporeSyringeCreate {
+	ssc.mutation.AddGrainJarIDs(ids...)
+	return ssc
+}
+
+// AddGrainJar adds the "grainJar" edges to the GrainJar entity.
+func (ssc *SporeSyringeCreate) AddGrainJar(g ...*GrainJar) *SporeSyringeCreate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return ssc.AddGrainJarIDs(ids...)
 }
 
 // Mutation returns the SporeSyringeMutation object of the builder.
@@ -165,6 +181,25 @@ func (ssc *SporeSyringeCreate) createSpec() (*SporeSyringe, *sqlgraph.CreateSpec
 	if value, ok := ssc.mutation.Supplier(); ok {
 		_spec.SetField(sporesyringe.FieldSupplier, field.TypeString, value)
 		_node.Supplier = value
+	}
+	if nodes := ssc.mutation.GrainJarIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sporesyringe.GrainJarTable,
+			Columns: []string{sporesyringe.GrainJarColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: grainjar.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

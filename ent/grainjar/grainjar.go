@@ -17,17 +17,8 @@ const (
 	FieldGrain = "grain"
 	// FieldHarvestDate holds the string denoting the harvestdate field in the database.
 	FieldHarvestDate = "harvest_date"
-	// EdgeSporeSyringe holds the string denoting the sporesyringe edge name in mutations.
-	EdgeSporeSyringe = "sporeSyringe"
 	// Table holds the table name of the grainjar in the database.
 	Table = "grain_jars"
-	// SporeSyringeTable is the table that holds the sporeSyringe relation/edge.
-	SporeSyringeTable = "spore_syringes"
-	// SporeSyringeInverseTable is the table name for the SporeSyringe entity.
-	// It exists in this package in order to avoid circular dependency with the "sporesyringe" package.
-	SporeSyringeInverseTable = "spore_syringes"
-	// SporeSyringeColumn is the table column denoting the sporeSyringe relation/edge.
-	SporeSyringeColumn = "grain_jar_spore_syringe"
 )
 
 // Columns holds all SQL columns for grainjar fields.
@@ -38,10 +29,21 @@ var Columns = []string{
 	FieldHarvestDate,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "grain_jars"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"spore_syringe_grain_jar",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

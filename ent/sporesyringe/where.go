@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -237,6 +238,33 @@ func SupplierEqualFold(v string) predicate.SporeSyringe {
 // SupplierContainsFold applies the ContainsFold predicate on the "Supplier" field.
 func SupplierContainsFold(v string) predicate.SporeSyringe {
 	return predicate.SporeSyringe(sql.FieldContainsFold(FieldSupplier, v))
+}
+
+// HasGrainJar applies the HasEdge predicate on the "grainJar" edge.
+func HasGrainJar() predicate.SporeSyringe {
+	return predicate.SporeSyringe(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarTable, GrainJarColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasGrainJarWith applies the HasEdge predicate on the "grainJar" edge with a given conditions (other predicates).
+func HasGrainJarWith(preds ...predicate.GrainJar) predicate.SporeSyringe {
+	return predicate.SporeSyringe(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(GrainJarInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarTable, GrainJarColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.
