@@ -22,6 +22,27 @@ type GrainJar struct {
 	Grain string `json:"Grain,omitempty"`
 	// HarvestDate holds the value of the "HarvestDate" field.
 	HarvestDate time.Time `json:"HarvestDate,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the GrainJarQuery when eager-loading is set.
+	Edges GrainJarEdges `json:"edges"`
+}
+
+// GrainJarEdges holds the relations/edges for other nodes in the graph.
+type GrainJarEdges struct {
+	// SporeSyringe holds the value of the sporeSyringe edge.
+	SporeSyringe []*SporeSyringe `json:"sporeSyringe,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// SporeSyringeOrErr returns the SporeSyringe value or an error if the edge
+// was not loaded in eager-loading.
+func (e GrainJarEdges) SporeSyringeOrErr() ([]*SporeSyringe, error) {
+	if e.loadedTypes[0] {
+		return e.SporeSyringe, nil
+	}
+	return nil, &NotLoadedError{edge: "sporeSyringe"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -77,6 +98,11 @@ func (gj *GrainJar) assignValues(columns []string, values []any) error {
 		}
 	}
 	return nil
+}
+
+// QuerySporeSyringe queries the "sporeSyringe" edge of the GrainJar entity.
+func (gj *GrainJar) QuerySporeSyringe() *SporeSyringeQuery {
+	return NewGrainJarClient(gj.config).QuerySporeSyringe(gj)
 }
 
 // Update returns a builder for updating this GrainJar.

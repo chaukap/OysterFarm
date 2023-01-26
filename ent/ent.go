@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"reflect"
 
@@ -39,7 +40,8 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		grainjar.Table: grainjar.ValidColumn,
+		grainjar.Table:     grainjar.ValidColumn,
+		sporesyringe.Table: sporesyringe.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"time"
 
@@ -52,6 +53,29 @@ func (gjc *GrainJarCreate) SetNillableGrain(s *string) *GrainJarCreate {
 func (gjc *GrainJarCreate) SetHarvestDate(t time.Time) *GrainJarCreate {
 	gjc.mutation.SetHarvestDate(t)
 	return gjc
+}
+
+// SetNillableHarvestDate sets the "HarvestDate" field if the given value is not nil.
+func (gjc *GrainJarCreate) SetNillableHarvestDate(t *time.Time) *GrainJarCreate {
+	if t != nil {
+		gjc.SetHarvestDate(*t)
+	}
+	return gjc
+}
+
+// AddSporeSyringeIDs adds the "sporeSyringe" edge to the SporeSyringe entity by IDs.
+func (gjc *GrainJarCreate) AddSporeSyringeIDs(ids ...int) *GrainJarCreate {
+	gjc.mutation.AddSporeSyringeIDs(ids...)
+	return gjc
+}
+
+// AddSporeSyringe adds the "sporeSyringe" edges to the SporeSyringe entity.
+func (gjc *GrainJarCreate) AddSporeSyringe(s ...*SporeSyringe) *GrainJarCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return gjc.AddSporeSyringeIDs(ids...)
 }
 
 // Mutation returns the GrainJarMutation object of the builder.
@@ -107,9 +131,6 @@ func (gjc *GrainJarCreate) check() error {
 	if _, ok := gjc.mutation.Grain(); !ok {
 		return &ValidationError{Name: "Grain", err: errors.New(`ent: missing required field "GrainJar.Grain"`)}
 	}
-	if _, ok := gjc.mutation.HarvestDate(); !ok {
-		return &ValidationError{Name: "HarvestDate", err: errors.New(`ent: missing required field "GrainJar.HarvestDate"`)}
-	}
 	return nil
 }
 
@@ -153,6 +174,25 @@ func (gjc *GrainJarCreate) createSpec() (*GrainJar, *sqlgraph.CreateSpec) {
 	if value, ok := gjc.mutation.HarvestDate(); ok {
 		_spec.SetField(grainjar.FieldHarvestDate, field.TypeTime, value)
 		_node.HarvestDate = value
+	}
+	if nodes := gjc.mutation.SporeSyringeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   grainjar.SporeSyringeTable,
+			Columns: []string{grainjar.SporeSyringeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

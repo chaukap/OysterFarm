@@ -5,113 +5,184 @@ import (
 	"example/myco-api/ent"
 	"example/myco-api/ent/grainjar"
 	"log"
+	"strconv"
 
-	"example/myco-api/models"
+	"example/myco-api/keys"
 	"fmt"
 	"net/http"
-	"time"
-	"example/myco-api/keys"
+
+	"github.com/astaxie/beego/validation"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func main() {
+type Server struct {
+	db   *ent.Client
+	http *gin.Engine
+}
+
+var svr Server
+
+func BindAndValid(c *gin.Context, form interface{}) (int, int) {
+	err := c.Bind(form)
+	if err != nil {
+		return http.StatusBadRequest, 400
+	}
+
+	valid := validation.Validation{}
+	check, err := valid.Valid(form)
+	if err != nil {
+		return http.StatusInternalServerError, 500
+	}
+	if !check {
+		return http.StatusBadRequest, 400
+	}
+
+	return http.StatusOK, 200
+}
+
+type Response struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+func ResponseJSON(c *gin.Context, httpCode, errCode int, msg string, data interface{}) {
+	c.JSON(httpCode, Response{
+		Code: errCode,
+		Msg:  msg,
+		Data: data,
+	})
+	return
+}
+
+func initDatabase() {
 	keys := keys.GetKeys()
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True", keys.User, keys.Password, keys.Host, keys.Port, keys.Database)
 	client, err := ent.Open("mysql", connectionString)
-    if err != nil {
-        log.Fatalf("failed opening connection to mysql: %v", err)
-    }
-    defer client.Close()
-    // Run the auto migration tool.
-    if err := client.Schema.Create(context.Background()); err != nil {
-        log.Fatalf("failed creating schema resources: %v", err)
-    }
-	postGrainJar(context.Background(), client)
+	if err != nil {
+		log.Fatalf("failed opening connection to mysql: %v", err)
+	}
+	//defer client.Close()
 
-    router := gin.Default()
-    router.GET("/grainJars", getGrainJars)
-	router.GET ("/grainJar/:id", getGrainJar)
-//	router.POST("/grainJar", postGrainJar)
+	svr.db = client
 
-    router.Run("localhost:8080")
+	// Run the auto migration tool.
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed creating schema resources: %v", err)
+	}
 }
 
-var grainJars = []models.GrainJar {
-	{
-		ID: "1", 
-		Grain: "Rye", 
-		SporeSyringe: models.SporeSyringe {
-			ID: "1",
-			Species: "Oyster",
-			Supplier: "North Spore",
-			Received: time.Now(),
-		},
-	},
-	{
-		ID: "2", 
-		Grain: "Brown Rice", 
-		SporeSyringe: models.SporeSyringe {
-			ID: "1",
-			Species: "Oyster",
-			Supplier: "North Spore",
-			Received: time.Now(),
-		},
-	},
-	{
-		ID: "3", 
-		Grain: "Cracked Corn", 
-		SporeSyringe: models.SporeSyringe {
-			ID: "1",
-			Species: "Oyster",
-			Supplier: "North Spore",
-			Received: time.Now(),
-		},
-	},
+func runHttpServer() {
+	router := gin.Default()
+
+	router.Use(gin.Logger())
+
+	router.Use(gin.Recovery())
+
+	svr.http = router
+
+	router.GET("/grainJars", getGrainJars)
+	router.GET("/grainJar/:id", getGrainJar)
+	router.POST("/grainJar", postGrainJar)
+
+	router.POST("/sporesyringe", postSporeSyringe)
+	_ = router.Run("localhost:8080")
+}
+
+func main() {
+	initDatabase()
+	runHttpServer()
 }
 
 func getGrainJars(c *gin.Context) {
-    c.IndentedJSON(http.StatusOK, grainJars)
+	grainJar, err := svr.db.GrainJar.Query().All(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "Get grain jars failed: "+err.Error(), nil)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, grainJar)
 }
 
 func getGrainJar(c *gin.Context) {
-	id := c.Param("id")
-
-    // Loop over the list of albums, looking for
-    // an album whose ID value matches the parameter.
-    for _, a := range grainJars {
-        if a.ID == id {
-            c.IndentedJSON(http.StatusOK, a)
-            return
-        }
-    }
-    c.IndentedJSON(http.StatusNotFound, gin.H{"message": "grain jar not found"})
+	id, _ := strconv.Atoi(c.Param("id"))
+	grainJar, err := svr.db.GrainJar.Query().
+		Where(grainjar.ID(id)).
+		First(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "Get grain jars failed: "+err.Error(), nil)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, grainJar)
 }
 
-func postGrainJar(ctx context.Context, client *ent.Client) (*ent.GrainJar, error) {
-    u, err := client.GrainJar.
-        Create().
-        SetGrain("Rye Malt Blend").
-		SetHarvestDate(time.Now()).
-        Save(ctx)
-    if err != nil {
-        return nil, fmt.Errorf("failed creating user: %w", err)
-    }
-    log.Println("user was created: ", u)
-    return u, nil
+func postGrainJar(c *gin.Context) {
+	type PostParam struct {
+		Grain string `form:"grain" json:"grain" valid:"Required; MaxSize(50)"`
+	}
+	var form PostParam
+
+	httpCode, errCode := BindAndValid(c, &form)
+	if errCode != 200 {
+		ResponseJSON(c, httpCode, errCode, "invalid param", nil)
+		return
+	}
+
+	grainJar, err := svr.db.GrainJar.
+		Create().
+		SetGrain(form.Grain).
+		Save(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "create grain jar failed: "+err.Error(), nil)
+		return
+	}
+
+	type ResponseData struct {
+		ID               uint64 `json:"id"`
+		Grain            string `json:"grain"`
+		InnoculationDate string `json:"innoculation_date"`
+	}
+	var resp ResponseData
+	resp.Grain = grainJar.Grain
+	resp.ID = uint64(grainJar.ID)
+	resp.InnoculationDate = grainJar.InnoculationDate.GoString()
+
+	ResponseJSON(c, http.StatusOK, 200, "", resp)
 }
 
-func QueryGrainJar(ctx context.Context, client *ent.Client) (*ent.GrainJar, error) {
-    u, err := client.GrainJar.
-        Query().
-        Where(grainjar.ID(1)).
-        // `Only` fails if no user found,
-        // or more than 1 user returned.
-        Only(ctx)
-    if err != nil {
-        return nil, fmt.Errorf("failed querying user: %w", err)
-    }
-    log.Println("user returned: ", u)
-    return u, nil
+func postSporeSyringe(c *gin.Context) {
+	type PostParam struct {
+		Species  string `form:"species" json:"species" valid:"Required; MaxSize(100)"`
+		Supplier string `form:"supplier" json:"supplier" valid:"Required; MaxSize(100)"`
+	}
+	var form PostParam
+
+	httpCode, errCode := BindAndValid(c, &form)
+	if errCode != 200 {
+		ResponseJSON(c, httpCode, errCode, "invalid param", nil)
+		return
+	}
+
+	sporeSyringe, err := svr.db.SporeSyringe.
+		Create().
+		SetSpecies(form.Species).
+		SetSupplier(form.Supplier).
+		Save(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "create spore syringe failed: "+err.Error(), nil)
+		return
+	}
+
+	type ResponseData struct {
+		ID       uint64 `json:"id"`
+		Species  string `json:"species"`
+		Supplier string `json:"supplier"`
+	}
+	var resp ResponseData
+	resp.Species = sporeSyringe.Species
+	resp.ID = uint64(sporeSyringe.ID)
+	resp.Supplier = sporeSyringe.Supplier
+
+	ResponseJSON(c, http.StatusOK, 200, "", resp)
 }

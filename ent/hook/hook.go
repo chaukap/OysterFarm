@@ -20,6 +20,18 @@ func (f GrainJarFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GrainJarMutation", m)
 }
 
+// The SporeSyringeFunc type is an adapter to allow the use of ordinary
+// function as SporeSyringe mutator.
+type SporeSyringeFunc func(context.Context, *ent.SporeSyringeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SporeSyringeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SporeSyringeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SporeSyringeMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

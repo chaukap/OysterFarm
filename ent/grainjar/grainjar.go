@@ -17,8 +17,17 @@ const (
 	FieldGrain = "grain"
 	// FieldHarvestDate holds the string denoting the harvestdate field in the database.
 	FieldHarvestDate = "harvest_date"
+	// EdgeSporeSyringe holds the string denoting the sporesyringe edge name in mutations.
+	EdgeSporeSyringe = "sporeSyringe"
 	// Table holds the table name of the grainjar in the database.
 	Table = "grain_jars"
+	// SporeSyringeTable is the table that holds the sporeSyringe relation/edge.
+	SporeSyringeTable = "spore_syringes"
+	// SporeSyringeInverseTable is the table name for the SporeSyringe entity.
+	// It exists in this package in order to avoid circular dependency with the "sporesyringe" package.
+	SporeSyringeInverseTable = "spore_syringes"
+	// SporeSyringeColumn is the table column denoting the sporeSyringe relation/edge.
+	SporeSyringeColumn = "grain_jar_spore_syringe"
 )
 
 // Columns holds all SQL columns for grainjar fields.

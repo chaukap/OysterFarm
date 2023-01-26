@@ -11,9 +11,11 @@ import (
 	"example/myco-api/ent/migrate"
 
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +25,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// GrainJar is the client for interacting with the GrainJar builders.
 	GrainJar *GrainJarClient
+	// SporeSyringe is the client for interacting with the SporeSyringe builders.
+	SporeSyringe *SporeSyringeClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.GrainJar = NewGrainJarClient(c.config)
+	c.SporeSyringe = NewSporeSyringeClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -68,9 +73,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		GrainJar: NewGrainJarClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		GrainJar:     NewGrainJarClient(cfg),
+		SporeSyringe: NewSporeSyringeClient(cfg),
 	}, nil
 }
 
@@ -88,9 +94,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		GrainJar: NewGrainJarClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		GrainJar:     NewGrainJarClient(cfg),
+		SporeSyringe: NewSporeSyringeClient(cfg),
 	}, nil
 }
 
@@ -120,12 +127,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.GrainJar.Use(hooks...)
+	c.SporeSyringe.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.GrainJar.Intercept(interceptors...)
+	c.SporeSyringe.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -133,6 +142,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *GrainJarMutation:
 		return c.GrainJar.mutate(ctx, m)
+	case *SporeSyringeMutation:
+		return c.SporeSyringe.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -231,6 +242,22 @@ func (c *GrainJarClient) GetX(ctx context.Context, id int) *GrainJar {
 	return obj
 }
 
+// QuerySporeSyringe queries the sporeSyringe edge of a GrainJar.
+func (c *GrainJarClient) QuerySporeSyringe(gj *GrainJar) *SporeSyringeQuery {
+	query := (&SporeSyringeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gj.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(grainjar.Table, grainjar.FieldID, id),
+			sqlgraph.To(sporesyringe.Table, sporesyringe.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, grainjar.SporeSyringeTable, grainjar.SporeSyringeColumn),
+		)
+		fromV = sqlgraph.Neighbors(gj.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *GrainJarClient) Hooks() []Hook {
 	return c.hooks.GrainJar
@@ -253,5 +280,123 @@ func (c *GrainJarClient) mutate(ctx context.Context, m *GrainJarMutation) (Value
 		return (&GrainJarDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown GrainJar mutation op: %q", m.Op())
+	}
+}
+
+// SporeSyringeClient is a client for the SporeSyringe schema.
+type SporeSyringeClient struct {
+	config
+}
+
+// NewSporeSyringeClient returns a client for the SporeSyringe from the given config.
+func NewSporeSyringeClient(c config) *SporeSyringeClient {
+	return &SporeSyringeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sporesyringe.Hooks(f(g(h())))`.
+func (c *SporeSyringeClient) Use(hooks ...Hook) {
+	c.hooks.SporeSyringe = append(c.hooks.SporeSyringe, hooks...)
+}
+
+// Use adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sporesyringe.Intercept(f(g(h())))`.
+func (c *SporeSyringeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SporeSyringe = append(c.inters.SporeSyringe, interceptors...)
+}
+
+// Create returns a builder for creating a SporeSyringe entity.
+func (c *SporeSyringeClient) Create() *SporeSyringeCreate {
+	mutation := newSporeSyringeMutation(c.config, OpCreate)
+	return &SporeSyringeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SporeSyringe entities.
+func (c *SporeSyringeClient) CreateBulk(builders ...*SporeSyringeCreate) *SporeSyringeCreateBulk {
+	return &SporeSyringeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SporeSyringe.
+func (c *SporeSyringeClient) Update() *SporeSyringeUpdate {
+	mutation := newSporeSyringeMutation(c.config, OpUpdate)
+	return &SporeSyringeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SporeSyringeClient) UpdateOne(ss *SporeSyringe) *SporeSyringeUpdateOne {
+	mutation := newSporeSyringeMutation(c.config, OpUpdateOne, withSporeSyringe(ss))
+	return &SporeSyringeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SporeSyringeClient) UpdateOneID(id int) *SporeSyringeUpdateOne {
+	mutation := newSporeSyringeMutation(c.config, OpUpdateOne, withSporeSyringeID(id))
+	return &SporeSyringeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SporeSyringe.
+func (c *SporeSyringeClient) Delete() *SporeSyringeDelete {
+	mutation := newSporeSyringeMutation(c.config, OpDelete)
+	return &SporeSyringeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SporeSyringeClient) DeleteOne(ss *SporeSyringe) *SporeSyringeDeleteOne {
+	return c.DeleteOneID(ss.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SporeSyringeClient) DeleteOneID(id int) *SporeSyringeDeleteOne {
+	builder := c.Delete().Where(sporesyringe.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SporeSyringeDeleteOne{builder}
+}
+
+// Query returns a query builder for SporeSyringe.
+func (c *SporeSyringeClient) Query() *SporeSyringeQuery {
+	return &SporeSyringeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSporeSyringe},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SporeSyringe entity by its id.
+func (c *SporeSyringeClient) Get(ctx context.Context, id int) (*SporeSyringe, error) {
+	return c.Query().Where(sporesyringe.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SporeSyringeClient) GetX(ctx context.Context, id int) *SporeSyringe {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SporeSyringeClient) Hooks() []Hook {
+	return c.hooks.SporeSyringe
+}
+
+// Interceptors returns the client interceptors.
+func (c *SporeSyringeClient) Interceptors() []Interceptor {
+	return c.inters.SporeSyringe
+}
+
+func (c *SporeSyringeClient) mutate(ctx context.Context, m *SporeSyringeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SporeSyringeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SporeSyringeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SporeSyringeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SporeSyringeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SporeSyringe mutation op: %q", m.Op())
 	}
 }

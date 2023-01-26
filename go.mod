@@ -4,11 +4,14 @@ go 1.19
 
 require github.com/gin-gonic/gin v1.8.2
 
+require github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
+
 require (
 	ariga.io/atlas v0.9.1-0.20230119145809-92243f7c55cb // indirect
 	entgo.io/ent v0.11.7 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/astaxie/beego v1.12.3
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect

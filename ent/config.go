@@ -27,10 +27,12 @@ type config struct {
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		GrainJar []ent.Hook
+		GrainJar     []ent.Hook
+		SporeSyringe []ent.Hook
 	}
 	inters struct {
-		GrainJar []ent.Interceptor
+		GrainJar     []ent.Interceptor
+		SporeSyringe []ent.Interceptor
 	}
 )
 

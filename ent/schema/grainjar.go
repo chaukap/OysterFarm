@@ -1,9 +1,11 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"time"
+	"entgo.io/ent/schema/edge"
 )
 
 // GrainJar holds the schema definition for the GrainJar entity.
@@ -13,16 +15,19 @@ type GrainJar struct {
 
 // Fields of the GrainJar.
 func (GrainJar) Fields() []ent.Field {
-    return []ent.Field{
-        field.Time("InnoculationDate").
+	return []ent.Field{
+		field.Time("InnoculationDate").
 			Default(time.Now),
-        field.String("Grain").
-            Default("unknown"),
-		field.Time("HarvestDate"),
-    }
+		field.String("Grain").
+			Default("unknown"),
+		field.Time("HarvestDate").
+			Optional(),
+	}
 }
 
 // Edges of the GrainJar.
 func (GrainJar) Edges() []ent.Edge {
-	return nil
+    return []ent.Edge{
+        edge.To("sporeSyringe", SporeSyringe.Type),
+    }
 }

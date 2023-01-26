@@ -5,6 +5,7 @@ package ent
 import (
 	"example/myco-api/ent/grainjar"
 	"example/myco-api/ent/schema"
+	"example/myco-api/ent/sporesyringe"
 	"time"
 )
 
@@ -22,4 +23,18 @@ func init() {
 	grainjarDescGrain := grainjarFields[1].Descriptor()
 	// grainjar.DefaultGrain holds the default value on creation for the Grain field.
 	grainjar.DefaultGrain = grainjarDescGrain.Default.(string)
+	sporesyringeFields := schema.SporeSyringe{}.Fields()
+	_ = sporesyringeFields
+	// sporesyringeDescRecievedDate is the schema descriptor for RecievedDate field.
+	sporesyringeDescRecievedDate := sporesyringeFields[0].Descriptor()
+	// sporesyringe.DefaultRecievedDate holds the default value on creation for the RecievedDate field.
+	sporesyringe.DefaultRecievedDate = sporesyringeDescRecievedDate.Default.(func() time.Time)
+	// sporesyringeDescSpecies is the schema descriptor for Species field.
+	sporesyringeDescSpecies := sporesyringeFields[1].Descriptor()
+	// sporesyringe.DefaultSpecies holds the default value on creation for the Species field.
+	sporesyringe.DefaultSpecies = sporesyringeDescSpecies.Default.(string)
+	// sporesyringeDescSupplier is the schema descriptor for Supplier field.
+	sporesyringeDescSupplier := sporesyringeFields[2].Descriptor()
+	// sporesyringe.DefaultSupplier holds the default value on creation for the Supplier field.
+	sporesyringe.DefaultSupplier = sporesyringeDescSupplier.Default.(string)
 }

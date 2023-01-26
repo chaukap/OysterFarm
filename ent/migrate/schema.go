@@ -13,7 +13,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "innoculation_date", Type: field.TypeTime},
 		{Name: "grain", Type: field.TypeString, Default: "unknown"},
-		{Name: "harvest_date", Type: field.TypeTime},
+		{Name: "harvest_date", Type: field.TypeTime, Nullable: true},
 	}
 	// GrainJarsTable holds the schema information for the "grain_jars" table.
 	GrainJarsTable = &schema.Table{
@@ -21,11 +21,35 @@ var (
 		Columns:    GrainJarsColumns,
 		PrimaryKey: []*schema.Column{GrainJarsColumns[0]},
 	}
+	// SporeSyringesColumns holds the columns for the "spore_syringes" table.
+	SporeSyringesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "recieved_date", Type: field.TypeTime},
+		{Name: "species", Type: field.TypeString, Default: "unknown"},
+		{Name: "supplier", Type: field.TypeString, Default: "unknown"},
+		{Name: "grain_jar_spore_syringe", Type: field.TypeInt, Nullable: true},
+	}
+	// SporeSyringesTable holds the schema information for the "spore_syringes" table.
+	SporeSyringesTable = &schema.Table{
+		Name:       "spore_syringes",
+		Columns:    SporeSyringesColumns,
+		PrimaryKey: []*schema.Column{SporeSyringesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "spore_syringes_grain_jars_sporeSyringe",
+				Columns:    []*schema.Column{SporeSyringesColumns[4]},
+				RefColumns: []*schema.Column{GrainJarsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		GrainJarsTable,
+		SporeSyringesTable,
 	}
 )
 
 func init() {
+	SporeSyringesTable.ForeignKeys[0].RefTable = GrainJarsTable
 }

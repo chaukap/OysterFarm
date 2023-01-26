@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// GrainJar is the client for interacting with the GrainJar builders.
 	GrainJar *GrainJarClient
+	// SporeSyringe is the client for interacting with the SporeSyringe builders.
+	SporeSyringe *SporeSyringeClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.GrainJar = NewGrainJarClient(tx.config)
+	tx.SporeSyringe = NewSporeSyringeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"example/myco-api/ent/grainjar"
 	"example/myco-api/ent/predicate"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"sync"
 	"time"
@@ -24,22 +25,26 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeGrainJar = "GrainJar"
+	TypeGrainJar     = "GrainJar"
+	TypeSporeSyringe = "SporeSyringe"
 )
 
 // GrainJarMutation represents an operation that mutates the GrainJar nodes in the graph.
 type GrainJarMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	_InnoculationDate *time.Time
-	_Grain            *string
-	_HarvestDate      *time.Time
-	clearedFields     map[string]struct{}
-	done              bool
-	oldValue          func(context.Context) (*GrainJar, error)
-	predicates        []predicate.GrainJar
+	op                  Op
+	typ                 string
+	id                  *int
+	_InnoculationDate   *time.Time
+	_Grain              *string
+	_HarvestDate        *time.Time
+	clearedFields       map[string]struct{}
+	sporeSyringe        map[int]struct{}
+	removedsporeSyringe map[int]struct{}
+	clearedsporeSyringe bool
+	done                bool
+	oldValue            func(context.Context) (*GrainJar, error)
+	predicates          []predicate.GrainJar
 }
 
 var _ ent.Mutation = (*GrainJarMutation)(nil)
@@ -243,9 +248,76 @@ func (m *GrainJarMutation) OldHarvestDate(ctx context.Context) (v time.Time, err
 	return oldValue.HarvestDate, nil
 }
 
+// ClearHarvestDate clears the value of the "HarvestDate" field.
+func (m *GrainJarMutation) ClearHarvestDate() {
+	m._HarvestDate = nil
+	m.clearedFields[grainjar.FieldHarvestDate] = struct{}{}
+}
+
+// HarvestDateCleared returns if the "HarvestDate" field was cleared in this mutation.
+func (m *GrainJarMutation) HarvestDateCleared() bool {
+	_, ok := m.clearedFields[grainjar.FieldHarvestDate]
+	return ok
+}
+
 // ResetHarvestDate resets all changes to the "HarvestDate" field.
 func (m *GrainJarMutation) ResetHarvestDate() {
 	m._HarvestDate = nil
+	delete(m.clearedFields, grainjar.FieldHarvestDate)
+}
+
+// AddSporeSyringeIDs adds the "sporeSyringe" edge to the SporeSyringe entity by ids.
+func (m *GrainJarMutation) AddSporeSyringeIDs(ids ...int) {
+	if m.sporeSyringe == nil {
+		m.sporeSyringe = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.sporeSyringe[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSporeSyringe clears the "sporeSyringe" edge to the SporeSyringe entity.
+func (m *GrainJarMutation) ClearSporeSyringe() {
+	m.clearedsporeSyringe = true
+}
+
+// SporeSyringeCleared reports if the "sporeSyringe" edge to the SporeSyringe entity was cleared.
+func (m *GrainJarMutation) SporeSyringeCleared() bool {
+	return m.clearedsporeSyringe
+}
+
+// RemoveSporeSyringeIDs removes the "sporeSyringe" edge to the SporeSyringe entity by IDs.
+func (m *GrainJarMutation) RemoveSporeSyringeIDs(ids ...int) {
+	if m.removedsporeSyringe == nil {
+		m.removedsporeSyringe = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.sporeSyringe, ids[i])
+		m.removedsporeSyringe[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSporeSyringe returns the removed IDs of the "sporeSyringe" edge to the SporeSyringe entity.
+func (m *GrainJarMutation) RemovedSporeSyringeIDs() (ids []int) {
+	for id := range m.removedsporeSyringe {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SporeSyringeIDs returns the "sporeSyringe" edge IDs in the mutation.
+func (m *GrainJarMutation) SporeSyringeIDs() (ids []int) {
+	for id := range m.sporeSyringe {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSporeSyringe resets all changes to the "sporeSyringe" edge.
+func (m *GrainJarMutation) ResetSporeSyringe() {
+	m.sporeSyringe = nil
+	m.clearedsporeSyringe = false
+	m.removedsporeSyringe = nil
 }
 
 // Where appends a list predicates to the GrainJarMutation builder.
@@ -380,7 +452,11 @@ func (m *GrainJarMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *GrainJarMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(grainjar.FieldHarvestDate) {
+		fields = append(fields, grainjar.FieldHarvestDate)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -393,6 +469,11 @@ func (m *GrainJarMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *GrainJarMutation) ClearField(name string) error {
+	switch name {
+	case grainjar.FieldHarvestDate:
+		m.ClearHarvestDate()
+		return nil
+	}
 	return fmt.Errorf("unknown GrainJar nullable field %s", name)
 }
 
@@ -415,48 +496,518 @@ func (m *GrainJarMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GrainJarMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.sporeSyringe != nil {
+		edges = append(edges, grainjar.EdgeSporeSyringe)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *GrainJarMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case grainjar.EdgeSporeSyringe:
+		ids := make([]ent.Value, 0, len(m.sporeSyringe))
+		for id := range m.sporeSyringe {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GrainJarMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedsporeSyringe != nil {
+		edges = append(edges, grainjar.EdgeSporeSyringe)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *GrainJarMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case grainjar.EdgeSporeSyringe:
+		ids := make([]ent.Value, 0, len(m.removedsporeSyringe))
+		for id := range m.removedsporeSyringe {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GrainJarMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedsporeSyringe {
+		edges = append(edges, grainjar.EdgeSporeSyringe)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *GrainJarMutation) EdgeCleared(name string) bool {
+	switch name {
+	case grainjar.EdgeSporeSyringe:
+		return m.clearedsporeSyringe
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *GrainJarMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown GrainJar unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *GrainJarMutation) ResetEdge(name string) error {
+	switch name {
+	case grainjar.EdgeSporeSyringe:
+		m.ResetSporeSyringe()
+		return nil
+	}
 	return fmt.Errorf("unknown GrainJar edge %s", name)
+}
+
+// SporeSyringeMutation represents an operation that mutates the SporeSyringe nodes in the graph.
+type SporeSyringeMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	_RecievedDate *time.Time
+	_Species      *string
+	_Supplier     *string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*SporeSyringe, error)
+	predicates    []predicate.SporeSyringe
+}
+
+var _ ent.Mutation = (*SporeSyringeMutation)(nil)
+
+// sporesyringeOption allows management of the mutation configuration using functional options.
+type sporesyringeOption func(*SporeSyringeMutation)
+
+// newSporeSyringeMutation creates new mutation for the SporeSyringe entity.
+func newSporeSyringeMutation(c config, op Op, opts ...sporesyringeOption) *SporeSyringeMutation {
+	m := &SporeSyringeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSporeSyringe,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSporeSyringeID sets the ID field of the mutation.
+func withSporeSyringeID(id int) sporesyringeOption {
+	return func(m *SporeSyringeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SporeSyringe
+		)
+		m.oldValue = func(ctx context.Context) (*SporeSyringe, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SporeSyringe.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSporeSyringe sets the old SporeSyringe of the mutation.
+func withSporeSyringe(node *SporeSyringe) sporesyringeOption {
+	return func(m *SporeSyringeMutation) {
+		m.oldValue = func(context.Context) (*SporeSyringe, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SporeSyringeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SporeSyringeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SporeSyringeMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SporeSyringeMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SporeSyringe.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetRecievedDate sets the "RecievedDate" field.
+func (m *SporeSyringeMutation) SetRecievedDate(t time.Time) {
+	m._RecievedDate = &t
+}
+
+// RecievedDate returns the value of the "RecievedDate" field in the mutation.
+func (m *SporeSyringeMutation) RecievedDate() (r time.Time, exists bool) {
+	v := m._RecievedDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecievedDate returns the old "RecievedDate" field's value of the SporeSyringe entity.
+// If the SporeSyringe object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SporeSyringeMutation) OldRecievedDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecievedDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecievedDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecievedDate: %w", err)
+	}
+	return oldValue.RecievedDate, nil
+}
+
+// ResetRecievedDate resets all changes to the "RecievedDate" field.
+func (m *SporeSyringeMutation) ResetRecievedDate() {
+	m._RecievedDate = nil
+}
+
+// SetSpecies sets the "Species" field.
+func (m *SporeSyringeMutation) SetSpecies(s string) {
+	m._Species = &s
+}
+
+// Species returns the value of the "Species" field in the mutation.
+func (m *SporeSyringeMutation) Species() (r string, exists bool) {
+	v := m._Species
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpecies returns the old "Species" field's value of the SporeSyringe entity.
+// If the SporeSyringe object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SporeSyringeMutation) OldSpecies(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpecies is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpecies requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpecies: %w", err)
+	}
+	return oldValue.Species, nil
+}
+
+// ResetSpecies resets all changes to the "Species" field.
+func (m *SporeSyringeMutation) ResetSpecies() {
+	m._Species = nil
+}
+
+// SetSupplier sets the "Supplier" field.
+func (m *SporeSyringeMutation) SetSupplier(s string) {
+	m._Supplier = &s
+}
+
+// Supplier returns the value of the "Supplier" field in the mutation.
+func (m *SporeSyringeMutation) Supplier() (r string, exists bool) {
+	v := m._Supplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSupplier returns the old "Supplier" field's value of the SporeSyringe entity.
+// If the SporeSyringe object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SporeSyringeMutation) OldSupplier(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSupplier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSupplier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSupplier: %w", err)
+	}
+	return oldValue.Supplier, nil
+}
+
+// ResetSupplier resets all changes to the "Supplier" field.
+func (m *SporeSyringeMutation) ResetSupplier() {
+	m._Supplier = nil
+}
+
+// Where appends a list predicates to the SporeSyringeMutation builder.
+func (m *SporeSyringeMutation) Where(ps ...predicate.SporeSyringe) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SporeSyringeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SporeSyringeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SporeSyringe, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SporeSyringeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SporeSyringeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SporeSyringe).
+func (m *SporeSyringeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SporeSyringeMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m._RecievedDate != nil {
+		fields = append(fields, sporesyringe.FieldRecievedDate)
+	}
+	if m._Species != nil {
+		fields = append(fields, sporesyringe.FieldSpecies)
+	}
+	if m._Supplier != nil {
+		fields = append(fields, sporesyringe.FieldSupplier)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SporeSyringeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case sporesyringe.FieldRecievedDate:
+		return m.RecievedDate()
+	case sporesyringe.FieldSpecies:
+		return m.Species()
+	case sporesyringe.FieldSupplier:
+		return m.Supplier()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SporeSyringeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case sporesyringe.FieldRecievedDate:
+		return m.OldRecievedDate(ctx)
+	case sporesyringe.FieldSpecies:
+		return m.OldSpecies(ctx)
+	case sporesyringe.FieldSupplier:
+		return m.OldSupplier(ctx)
+	}
+	return nil, fmt.Errorf("unknown SporeSyringe field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SporeSyringeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case sporesyringe.FieldRecievedDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecievedDate(v)
+		return nil
+	case sporesyringe.FieldSpecies:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpecies(v)
+		return nil
+	case sporesyringe.FieldSupplier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSupplier(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SporeSyringe field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SporeSyringeMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SporeSyringeMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SporeSyringeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown SporeSyringe numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SporeSyringeMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SporeSyringeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SporeSyringeMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown SporeSyringe nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SporeSyringeMutation) ResetField(name string) error {
+	switch name {
+	case sporesyringe.FieldRecievedDate:
+		m.ResetRecievedDate()
+		return nil
+	case sporesyringe.FieldSpecies:
+		m.ResetSpecies()
+		return nil
+	case sporesyringe.FieldSupplier:
+		m.ResetSupplier()
+		return nil
+	}
+	return fmt.Errorf("unknown SporeSyringe field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SporeSyringeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SporeSyringeMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SporeSyringeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SporeSyringeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SporeSyringeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SporeSyringeMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SporeSyringeMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SporeSyringe unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SporeSyringeMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SporeSyringe edge %s", name)
 }

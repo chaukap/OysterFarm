@@ -8,3 +8,6 @@ import (
 
 // GrainJar is the predicate function for grainjar builders.
 type GrainJar func(*sql.Selector)
+
+// SporeSyringe is the predicate function for sporesyringe builders.
+type SporeSyringe func(*sql.Selector)
