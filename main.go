@@ -84,11 +84,11 @@ func runHttpServer() {
 
 	svr.http = router
 
-	router.GET("/grainjars", getGrainJars)
-	router.GET("/grainjar/:id", getGrainJar)
-	router.POST("/grainjar", postGrainJar)
+	router.GET("/api/grainjars", getGrainJars)
+	router.GET("/api/grainjar/:id", getGrainJar)
+	router.POST("/api/grainjar", postGrainJar)
 
-	router.POST("/sporesyringe", postSporeSyringe)
+	router.POST("/api/sporesyringe", postSporeSyringe)
 	_ = router.Run("localhost:8080")
 }
 
@@ -98,6 +98,7 @@ func main() {
 }
 
 func getGrainJars(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "http://localhost:8081")
 	grainJar, err := svr.db.GrainJar.Query().All(context.Background())
 	if err != nil {
 		ResponseJSON(c, http.StatusOK, 500, "Get grain jars failed: "+err.Error(), nil)
@@ -120,7 +121,7 @@ func getGrainJar(c *gin.Context) {
 
 func postGrainJar(c *gin.Context) {
 	type PostParam struct {
-		Grain string `form:"grain" json:"grain" valid:"Required; MaxSize(50)"`
+		Grain        string `form:"grain" json:"grain" valid:"Required; MaxSize(50)"`
 		SporeSyringe string `form:"spore_syringe" json:"spore_syringe" valid:"Required"`
 	}
 	var form PostParam
@@ -158,7 +159,7 @@ func postGrainJar(c *gin.Context) {
 		ResponseJSON(c, http.StatusOK, 500, "create grain jar failed: "+newerr.Error(), nil)
 		return
 	}
-	
+
 	type ResponseData struct {
 		ID               uint64 `json:"id"`
 		Grain            string `json:"grain"`
