@@ -19,11 +19,11 @@ import (
 // SporeSyringeQuery is the builder for querying SporeSyringe entities.
 type SporeSyringeQuery struct {
 	config
-	ctx          *QueryContext
-	order        []OrderFunc
-	inters       []Interceptor
-	predicates   []predicate.SporeSyringe
-	withGrainJar *GrainJarQuery
+	ctx           *QueryContext
+	order         []OrderFunc
+	inters        []Interceptor
+	predicates    []predicate.SporeSyringe
+	withGrainJars *GrainJarQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,8 +60,8 @@ func (ssq *SporeSyringeQuery) Order(o ...OrderFunc) *SporeSyringeQuery {
 	return ssq
 }
 
-// QueryGrainJar chains the current query on the "grainJar" edge.
-func (ssq *SporeSyringeQuery) QueryGrainJar() *GrainJarQuery {
+// QueryGrainJars chains the current query on the "grainJars" edge.
+func (ssq *SporeSyringeQuery) QueryGrainJars() *GrainJarQuery {
 	query := (&GrainJarClient{config: ssq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := ssq.prepareQuery(ctx); err != nil {
@@ -74,7 +74,7 @@ func (ssq *SporeSyringeQuery) QueryGrainJar() *GrainJarQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(sporesyringe.Table, sporesyringe.FieldID, selector),
 			sqlgraph.To(grainjar.Table, grainjar.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, sporesyringe.GrainJarTable, sporesyringe.GrainJarColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, sporesyringe.GrainJarsTable, sporesyringe.GrainJarsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ssq.driver.Dialect(), step)
 		return fromU, nil
@@ -267,26 +267,26 @@ func (ssq *SporeSyringeQuery) Clone() *SporeSyringeQuery {
 		return nil
 	}
 	return &SporeSyringeQuery{
-		config:       ssq.config,
-		ctx:          ssq.ctx.Clone(),
-		order:        append([]OrderFunc{}, ssq.order...),
-		inters:       append([]Interceptor{}, ssq.inters...),
-		predicates:   append([]predicate.SporeSyringe{}, ssq.predicates...),
-		withGrainJar: ssq.withGrainJar.Clone(),
+		config:        ssq.config,
+		ctx:           ssq.ctx.Clone(),
+		order:         append([]OrderFunc{}, ssq.order...),
+		inters:        append([]Interceptor{}, ssq.inters...),
+		predicates:    append([]predicate.SporeSyringe{}, ssq.predicates...),
+		withGrainJars: ssq.withGrainJars.Clone(),
 		// clone intermediate query.
 		sql:  ssq.sql.Clone(),
 		path: ssq.path,
 	}
 }
 
-// WithGrainJar tells the query-builder to eager-load the nodes that are connected to
-// the "grainJar" edge. The optional arguments are used to configure the query builder of the edge.
-func (ssq *SporeSyringeQuery) WithGrainJar(opts ...func(*GrainJarQuery)) *SporeSyringeQuery {
+// WithGrainJars tells the query-builder to eager-load the nodes that are connected to
+// the "grainJars" edge. The optional arguments are used to configure the query builder of the edge.
+func (ssq *SporeSyringeQuery) WithGrainJars(opts ...func(*GrainJarQuery)) *SporeSyringeQuery {
 	query := (&GrainJarClient{config: ssq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ssq.withGrainJar = query
+	ssq.withGrainJars = query
 	return ssq
 }
 
@@ -369,7 +369,7 @@ func (ssq *SporeSyringeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*SporeSyringe{}
 		_spec       = ssq.querySpec()
 		loadedTypes = [1]bool{
-			ssq.withGrainJar != nil,
+			ssq.withGrainJars != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -390,17 +390,17 @@ func (ssq *SporeSyringeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ssq.withGrainJar; query != nil {
-		if err := ssq.loadGrainJar(ctx, query, nodes,
-			func(n *SporeSyringe) { n.Edges.GrainJar = []*GrainJar{} },
-			func(n *SporeSyringe, e *GrainJar) { n.Edges.GrainJar = append(n.Edges.GrainJar, e) }); err != nil {
+	if query := ssq.withGrainJars; query != nil {
+		if err := ssq.loadGrainJars(ctx, query, nodes,
+			func(n *SporeSyringe) { n.Edges.GrainJars = []*GrainJar{} },
+			func(n *SporeSyringe, e *GrainJar) { n.Edges.GrainJars = append(n.Edges.GrainJars, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (ssq *SporeSyringeQuery) loadGrainJar(ctx context.Context, query *GrainJarQuery, nodes []*SporeSyringe, init func(*SporeSyringe), assign func(*SporeSyringe, *GrainJar)) error {
+func (ssq *SporeSyringeQuery) loadGrainJars(ctx context.Context, query *GrainJarQuery, nodes []*SporeSyringe, init func(*SporeSyringe), assign func(*SporeSyringe, *GrainJar)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SporeSyringe)
 	for i := range nodes {
@@ -412,20 +412,20 @@ func (ssq *SporeSyringeQuery) loadGrainJar(ctx context.Context, query *GrainJarQ
 	}
 	query.withFKs = true
 	query.Where(predicate.GrainJar(func(s *sql.Selector) {
-		s.Where(sql.InValues(sporesyringe.GrainJarColumn, fks...))
+		s.Where(sql.InValues(sporesyringe.GrainJarsColumn, fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.spore_syringe_grain_jar
+		fk := n.spore_syringe_grain_jars
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "spore_syringe_grain_jar" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "spore_syringe_grain_jars" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "spore_syringe_grain_jar" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "spore_syringe_grain_jars" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

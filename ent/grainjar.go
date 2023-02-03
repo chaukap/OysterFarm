@@ -4,6 +4,7 @@ package ent
 
 import (
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"strings"
 	"time"
@@ -21,8 +22,33 @@ type GrainJar struct {
 	// Grain holds the value of the "Grain" field.
 	Grain string `json:"Grain,omitempty"`
 	// HarvestDate holds the value of the "HarvestDate" field.
-	HarvestDate             time.Time `json:"HarvestDate,omitempty"`
-	spore_syringe_grain_jar *int
+	HarvestDate time.Time `json:"HarvestDate,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the GrainJarQuery when eager-loading is set.
+	Edges                    GrainJarEdges `json:"edges"`
+	spore_syringe_grain_jars *int
+}
+
+// GrainJarEdges holds the relations/edges for other nodes in the graph.
+type GrainJarEdges struct {
+	// SporeSyringes holds the value of the sporeSyringes edge.
+	SporeSyringes *SporeSyringe `json:"sporeSyringes,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// SporeSyringesOrErr returns the SporeSyringes value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e GrainJarEdges) SporeSyringesOrErr() (*SporeSyringe, error) {
+	if e.loadedTypes[0] {
+		if e.SporeSyringes == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: sporesyringe.Label}
+		}
+		return e.SporeSyringes, nil
+	}
+	return nil, &NotLoadedError{edge: "sporeSyringes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,7 +62,7 @@ func (*GrainJar) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case grainjar.FieldInnoculationDate, grainjar.FieldHarvestDate:
 			values[i] = new(sql.NullTime)
-		case grainjar.ForeignKeys[0]: // spore_syringe_grain_jar
+		case grainjar.ForeignKeys[0]: // spore_syringe_grain_jars
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type GrainJar", columns[i])
@@ -79,14 +105,19 @@ func (gj *GrainJar) assignValues(columns []string, values []any) error {
 			}
 		case grainjar.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field spore_syringe_grain_jar", value)
+				return fmt.Errorf("unexpected type %T for edge-field spore_syringe_grain_jars", value)
 			} else if value.Valid {
-				gj.spore_syringe_grain_jar = new(int)
-				*gj.spore_syringe_grain_jar = int(value.Int64)
+				gj.spore_syringe_grain_jars = new(int)
+				*gj.spore_syringe_grain_jars = int(value.Int64)
 			}
 		}
 	}
 	return nil
+}
+
+// QuerySporeSyringes queries the "sporeSyringes" edge of the GrainJar entity.
+func (gj *GrainJar) QuerySporeSyringes() *SporeSyringeQuery {
+	return NewGrainJarClient(gj.config).QuerySporeSyringes(gj)
 }
 
 // Update returns a builder for updating this GrainJar.

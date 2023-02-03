@@ -14,7 +14,7 @@ var (
 		{Name: "innoculation_date", Type: field.TypeTime},
 		{Name: "grain", Type: field.TypeString, Default: "unknown"},
 		{Name: "harvest_date", Type: field.TypeTime, Nullable: true},
-		{Name: "spore_syringe_grain_jar", Type: field.TypeInt, Nullable: true},
+		{Name: "spore_syringe_grain_jars", Type: field.TypeInt, Nullable: true},
 	}
 	// GrainJarsTable holds the schema information for the "grain_jars" table.
 	GrainJarsTable = &schema.Table{
@@ -23,7 +23,7 @@ var (
 		PrimaryKey: []*schema.Column{GrainJarsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "grain_jars_spore_syringes_grainJar",
+				Symbol:     "grain_jars_spore_syringes_grainJars",
 				Columns:    []*schema.Column{GrainJarsColumns[4]},
 				RefColumns: []*schema.Column{SporeSyringesColumns[0]},
 				OnDelete:   schema.SetNull,

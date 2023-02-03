@@ -29,20 +29,20 @@ type SporeSyringe struct {
 
 // SporeSyringeEdges holds the relations/edges for other nodes in the graph.
 type SporeSyringeEdges struct {
-	// GrainJar holds the value of the grainJar edge.
-	GrainJar []*GrainJar `json:"grainJar,omitempty"`
+	// GrainJars holds the value of the grainJars edge.
+	GrainJars []*GrainJar `json:"grainJars,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// GrainJarOrErr returns the GrainJar value or an error if the edge
+// GrainJarsOrErr returns the GrainJars value or an error if the edge
 // was not loaded in eager-loading.
-func (e SporeSyringeEdges) GrainJarOrErr() ([]*GrainJar, error) {
+func (e SporeSyringeEdges) GrainJarsOrErr() ([]*GrainJar, error) {
 	if e.loadedTypes[0] {
-		return e.GrainJar, nil
+		return e.GrainJars, nil
 	}
-	return nil, &NotLoadedError{edge: "grainJar"}
+	return nil, &NotLoadedError{edge: "grainJars"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -100,9 +100,9 @@ func (ss *SporeSyringe) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// QueryGrainJar queries the "grainJar" edge of the SporeSyringe entity.
-func (ss *SporeSyringe) QueryGrainJar() *GrainJarQuery {
-	return NewSporeSyringeClient(ss.config).QueryGrainJar(ss)
+// QueryGrainJars queries the "grainJars" edge of the SporeSyringe entity.
+func (ss *SporeSyringe) QueryGrainJars() *GrainJarQuery {
+	return NewSporeSyringeClient(ss.config).QueryGrainJars(ss)
 }
 
 // Update returns a builder for updating this SporeSyringe.

@@ -71,14 +71,14 @@ func (ssu *SporeSyringeUpdate) SetNillableSupplier(s *string) *SporeSyringeUpdat
 	return ssu
 }
 
-// AddGrainJarIDs adds the "grainJar" edge to the GrainJar entity by IDs.
+// AddGrainJarIDs adds the "grainJars" edge to the GrainJar entity by IDs.
 func (ssu *SporeSyringeUpdate) AddGrainJarIDs(ids ...int) *SporeSyringeUpdate {
 	ssu.mutation.AddGrainJarIDs(ids...)
 	return ssu
 }
 
-// AddGrainJar adds the "grainJar" edges to the GrainJar entity.
-func (ssu *SporeSyringeUpdate) AddGrainJar(g ...*GrainJar) *SporeSyringeUpdate {
+// AddGrainJars adds the "grainJars" edges to the GrainJar entity.
+func (ssu *SporeSyringeUpdate) AddGrainJars(g ...*GrainJar) *SporeSyringeUpdate {
 	ids := make([]int, len(g))
 	for i := range g {
 		ids[i] = g[i].ID
@@ -91,20 +91,20 @@ func (ssu *SporeSyringeUpdate) Mutation() *SporeSyringeMutation {
 	return ssu.mutation
 }
 
-// ClearGrainJar clears all "grainJar" edges to the GrainJar entity.
-func (ssu *SporeSyringeUpdate) ClearGrainJar() *SporeSyringeUpdate {
-	ssu.mutation.ClearGrainJar()
+// ClearGrainJars clears all "grainJars" edges to the GrainJar entity.
+func (ssu *SporeSyringeUpdate) ClearGrainJars() *SporeSyringeUpdate {
+	ssu.mutation.ClearGrainJars()
 	return ssu
 }
 
-// RemoveGrainJarIDs removes the "grainJar" edge to GrainJar entities by IDs.
+// RemoveGrainJarIDs removes the "grainJars" edge to GrainJar entities by IDs.
 func (ssu *SporeSyringeUpdate) RemoveGrainJarIDs(ids ...int) *SporeSyringeUpdate {
 	ssu.mutation.RemoveGrainJarIDs(ids...)
 	return ssu
 }
 
-// RemoveGrainJar removes "grainJar" edges to GrainJar entities.
-func (ssu *SporeSyringeUpdate) RemoveGrainJar(g ...*GrainJar) *SporeSyringeUpdate {
+// RemoveGrainJars removes "grainJars" edges to GrainJar entities.
+func (ssu *SporeSyringeUpdate) RemoveGrainJars(g ...*GrainJar) *SporeSyringeUpdate {
 	ids := make([]int, len(g))
 	for i := range g {
 		ids[i] = g[i].ID
@@ -166,12 +166,12 @@ func (ssu *SporeSyringeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ssu.mutation.Supplier(); ok {
 		_spec.SetField(sporesyringe.FieldSupplier, field.TypeString, value)
 	}
-	if ssu.mutation.GrainJarCleared() {
+	if ssu.mutation.GrainJarsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -182,12 +182,12 @@ func (ssu *SporeSyringeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ssu.mutation.RemovedGrainJarIDs(); len(nodes) > 0 && !ssu.mutation.GrainJarCleared() {
+	if nodes := ssu.mutation.RemovedGrainJarsIDs(); len(nodes) > 0 && !ssu.mutation.GrainJarsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -201,12 +201,12 @@ func (ssu *SporeSyringeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ssu.mutation.GrainJarIDs(); len(nodes) > 0 {
+	if nodes := ssu.mutation.GrainJarsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -282,14 +282,14 @@ func (ssuo *SporeSyringeUpdateOne) SetNillableSupplier(s *string) *SporeSyringeU
 	return ssuo
 }
 
-// AddGrainJarIDs adds the "grainJar" edge to the GrainJar entity by IDs.
+// AddGrainJarIDs adds the "grainJars" edge to the GrainJar entity by IDs.
 func (ssuo *SporeSyringeUpdateOne) AddGrainJarIDs(ids ...int) *SporeSyringeUpdateOne {
 	ssuo.mutation.AddGrainJarIDs(ids...)
 	return ssuo
 }
 
-// AddGrainJar adds the "grainJar" edges to the GrainJar entity.
-func (ssuo *SporeSyringeUpdateOne) AddGrainJar(g ...*GrainJar) *SporeSyringeUpdateOne {
+// AddGrainJars adds the "grainJars" edges to the GrainJar entity.
+func (ssuo *SporeSyringeUpdateOne) AddGrainJars(g ...*GrainJar) *SporeSyringeUpdateOne {
 	ids := make([]int, len(g))
 	for i := range g {
 		ids[i] = g[i].ID
@@ -302,20 +302,20 @@ func (ssuo *SporeSyringeUpdateOne) Mutation() *SporeSyringeMutation {
 	return ssuo.mutation
 }
 
-// ClearGrainJar clears all "grainJar" edges to the GrainJar entity.
-func (ssuo *SporeSyringeUpdateOne) ClearGrainJar() *SporeSyringeUpdateOne {
-	ssuo.mutation.ClearGrainJar()
+// ClearGrainJars clears all "grainJars" edges to the GrainJar entity.
+func (ssuo *SporeSyringeUpdateOne) ClearGrainJars() *SporeSyringeUpdateOne {
+	ssuo.mutation.ClearGrainJars()
 	return ssuo
 }
 
-// RemoveGrainJarIDs removes the "grainJar" edge to GrainJar entities by IDs.
+// RemoveGrainJarIDs removes the "grainJars" edge to GrainJar entities by IDs.
 func (ssuo *SporeSyringeUpdateOne) RemoveGrainJarIDs(ids ...int) *SporeSyringeUpdateOne {
 	ssuo.mutation.RemoveGrainJarIDs(ids...)
 	return ssuo
 }
 
-// RemoveGrainJar removes "grainJar" edges to GrainJar entities.
-func (ssuo *SporeSyringeUpdateOne) RemoveGrainJar(g ...*GrainJar) *SporeSyringeUpdateOne {
+// RemoveGrainJars removes "grainJars" edges to GrainJar entities.
+func (ssuo *SporeSyringeUpdateOne) RemoveGrainJars(g ...*GrainJar) *SporeSyringeUpdateOne {
 	ids := make([]int, len(g))
 	for i := range g {
 		ids[i] = g[i].ID
@@ -401,12 +401,12 @@ func (ssuo *SporeSyringeUpdateOne) sqlSave(ctx context.Context) (_node *SporeSyr
 	if value, ok := ssuo.mutation.Supplier(); ok {
 		_spec.SetField(sporesyringe.FieldSupplier, field.TypeString, value)
 	}
-	if ssuo.mutation.GrainJarCleared() {
+	if ssuo.mutation.GrainJarsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -417,12 +417,12 @@ func (ssuo *SporeSyringeUpdateOne) sqlSave(ctx context.Context) (_node *SporeSyr
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ssuo.mutation.RemovedGrainJarIDs(); len(nodes) > 0 && !ssuo.mutation.GrainJarCleared() {
+	if nodes := ssuo.mutation.RemovedGrainJarsIDs(); len(nodes) > 0 && !ssuo.mutation.GrainJarsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -436,12 +436,12 @@ func (ssuo *SporeSyringeUpdateOne) sqlSave(ctx context.Context) (_node *SporeSyr
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ssuo.mutation.GrainJarIDs(); len(nodes) > 0 {
+	if nodes := ssuo.mutation.GrainJarsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

@@ -63,14 +63,14 @@ func (ssc *SporeSyringeCreate) SetNillableSupplier(s *string) *SporeSyringeCreat
 	return ssc
 }
 
-// AddGrainJarIDs adds the "grainJar" edge to the GrainJar entity by IDs.
+// AddGrainJarIDs adds the "grainJars" edge to the GrainJar entity by IDs.
 func (ssc *SporeSyringeCreate) AddGrainJarIDs(ids ...int) *SporeSyringeCreate {
 	ssc.mutation.AddGrainJarIDs(ids...)
 	return ssc
 }
 
-// AddGrainJar adds the "grainJar" edges to the GrainJar entity.
-func (ssc *SporeSyringeCreate) AddGrainJar(g ...*GrainJar) *SporeSyringeCreate {
+// AddGrainJars adds the "grainJars" edges to the GrainJar entity.
+func (ssc *SporeSyringeCreate) AddGrainJars(g ...*GrainJar) *SporeSyringeCreate {
 	ids := make([]int, len(g))
 	for i := range g {
 		ids[i] = g[i].ID
@@ -182,12 +182,12 @@ func (ssc *SporeSyringeCreate) createSpec() (*SporeSyringe, *sqlgraph.CreateSpec
 		_spec.SetField(sporesyringe.FieldSupplier, field.TypeString, value)
 		_node.Supplier = value
 	}
-	if nodes := ssc.mutation.GrainJarIDs(); len(nodes) > 0 {
+	if nodes := ssc.mutation.GrainJarsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   sporesyringe.GrainJarTable,
-			Columns: []string{sporesyringe.GrainJarColumn},
+			Table:   sporesyringe.GrainJarsTable,
+			Columns: []string{sporesyringe.GrainJarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"example/myco-api/ent/grainjar"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"time"
 
@@ -60,6 +61,25 @@ func (gjc *GrainJarCreate) SetNillableHarvestDate(t *time.Time) *GrainJarCreate 
 		gjc.SetHarvestDate(*t)
 	}
 	return gjc
+}
+
+// SetSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID.
+func (gjc *GrainJarCreate) SetSporeSyringesID(id int) *GrainJarCreate {
+	gjc.mutation.SetSporeSyringesID(id)
+	return gjc
+}
+
+// SetNillableSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID if the given value is not nil.
+func (gjc *GrainJarCreate) SetNillableSporeSyringesID(id *int) *GrainJarCreate {
+	if id != nil {
+		gjc = gjc.SetSporeSyringesID(*id)
+	}
+	return gjc
+}
+
+// SetSporeSyringes sets the "sporeSyringes" edge to the SporeSyringe entity.
+func (gjc *GrainJarCreate) SetSporeSyringes(s *SporeSyringe) *GrainJarCreate {
+	return gjc.SetSporeSyringesID(s.ID)
 }
 
 // Mutation returns the GrainJarMutation object of the builder.
@@ -158,6 +178,26 @@ func (gjc *GrainJarCreate) createSpec() (*GrainJar, *sqlgraph.CreateSpec) {
 	if value, ok := gjc.mutation.HarvestDate(); ok {
 		_spec.SetField(grainjar.FieldHarvestDate, field.TypeTime, value)
 		_node.HarvestDate = value
+	}
+	if nodes := gjc.mutation.SporeSyringesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   grainjar.SporeSyringesTable,
+			Columns: []string{grainjar.SporeSyringesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.spore_syringe_grain_jars = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

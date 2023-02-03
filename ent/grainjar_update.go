@@ -7,6 +7,7 @@ import (
 	"errors"
 	"example/myco-api/ent/grainjar"
 	"example/myco-api/ent/predicate"
+	"example/myco-api/ent/sporesyringe"
 	"fmt"
 	"time"
 
@@ -76,9 +77,34 @@ func (gju *GrainJarUpdate) ClearHarvestDate() *GrainJarUpdate {
 	return gju
 }
 
+// SetSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID.
+func (gju *GrainJarUpdate) SetSporeSyringesID(id int) *GrainJarUpdate {
+	gju.mutation.SetSporeSyringesID(id)
+	return gju
+}
+
+// SetNillableSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID if the given value is not nil.
+func (gju *GrainJarUpdate) SetNillableSporeSyringesID(id *int) *GrainJarUpdate {
+	if id != nil {
+		gju = gju.SetSporeSyringesID(*id)
+	}
+	return gju
+}
+
+// SetSporeSyringes sets the "sporeSyringes" edge to the SporeSyringe entity.
+func (gju *GrainJarUpdate) SetSporeSyringes(s *SporeSyringe) *GrainJarUpdate {
+	return gju.SetSporeSyringesID(s.ID)
+}
+
 // Mutation returns the GrainJarMutation object of the builder.
 func (gju *GrainJarUpdate) Mutation() *GrainJarMutation {
 	return gju.mutation
+}
+
+// ClearSporeSyringes clears the "sporeSyringes" edge to the SporeSyringe entity.
+func (gju *GrainJarUpdate) ClearSporeSyringes() *GrainJarUpdate {
+	gju.mutation.ClearSporeSyringes()
+	return gju
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -137,6 +163,41 @@ func (gju *GrainJarUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if gju.mutation.HarvestDateCleared() {
 		_spec.ClearField(grainjar.FieldHarvestDate, field.TypeTime)
+	}
+	if gju.mutation.SporeSyringesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   grainjar.SporeSyringesTable,
+			Columns: []string{grainjar.SporeSyringesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gju.mutation.SporeSyringesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   grainjar.SporeSyringesTable,
+			Columns: []string{grainjar.SporeSyringesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gju.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -206,9 +267,34 @@ func (gjuo *GrainJarUpdateOne) ClearHarvestDate() *GrainJarUpdateOne {
 	return gjuo
 }
 
+// SetSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID.
+func (gjuo *GrainJarUpdateOne) SetSporeSyringesID(id int) *GrainJarUpdateOne {
+	gjuo.mutation.SetSporeSyringesID(id)
+	return gjuo
+}
+
+// SetNillableSporeSyringesID sets the "sporeSyringes" edge to the SporeSyringe entity by ID if the given value is not nil.
+func (gjuo *GrainJarUpdateOne) SetNillableSporeSyringesID(id *int) *GrainJarUpdateOne {
+	if id != nil {
+		gjuo = gjuo.SetSporeSyringesID(*id)
+	}
+	return gjuo
+}
+
+// SetSporeSyringes sets the "sporeSyringes" edge to the SporeSyringe entity.
+func (gjuo *GrainJarUpdateOne) SetSporeSyringes(s *SporeSyringe) *GrainJarUpdateOne {
+	return gjuo.SetSporeSyringesID(s.ID)
+}
+
 // Mutation returns the GrainJarMutation object of the builder.
 func (gjuo *GrainJarUpdateOne) Mutation() *GrainJarMutation {
 	return gjuo.mutation
+}
+
+// ClearSporeSyringes clears the "sporeSyringes" edge to the SporeSyringe entity.
+func (gjuo *GrainJarUpdateOne) ClearSporeSyringes() *GrainJarUpdateOne {
+	gjuo.mutation.ClearSporeSyringes()
+	return gjuo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -291,6 +377,41 @@ func (gjuo *GrainJarUpdateOne) sqlSave(ctx context.Context) (_node *GrainJar, er
 	}
 	if gjuo.mutation.HarvestDateCleared() {
 		_spec.ClearField(grainjar.FieldHarvestDate, field.TypeTime)
+	}
+	if gjuo.mutation.SporeSyringesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   grainjar.SporeSyringesTable,
+			Columns: []string{grainjar.SporeSyringesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gjuo.mutation.SporeSyringesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   grainjar.SporeSyringesTable,
+			Columns: []string{grainjar.SporeSyringesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: sporesyringe.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &GrainJar{config: gjuo.config}
 	_spec.Assign = _node.assignValues

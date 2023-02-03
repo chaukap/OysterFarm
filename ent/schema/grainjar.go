@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -26,5 +27,7 @@ func (GrainJar) Fields() []ent.Field {
 
 // Edges of the GrainJar.
 func (GrainJar) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("sporeSyringes", SporeSyringe.Type).Ref("grainJars").Unique(),
+	}
 }

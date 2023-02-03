@@ -77,9 +77,7 @@ func initDatabase() {
 
 func runHttpServer() {
 	router := gin.Default()
-
 	router.Use(gin.Logger())
-
 	router.Use(gin.Recovery())
 
 	svr.http = router
@@ -89,6 +87,7 @@ func runHttpServer() {
 	router.POST("/api/grainjar", postGrainJar)
 
 	router.POST("/api/sporesyringe", postSporeSyringe)
+	router.GET("/api/sporesyringe/:id", getSporeSyringe)
 	_ = router.Run("localhost:8080")
 }
 
@@ -144,19 +143,10 @@ func postGrainJar(c *gin.Context) {
 	grainJar, err := svr.db.GrainJar.
 		Create().
 		SetGrain(form.Grain).
+		SetSporeSyringes(sporeSyringe).
 		Save(context.Background())
 	if err != nil {
 		ResponseJSON(c, http.StatusOK, 500, "create grain jar failed: "+err.Error(), nil)
-		return
-	}
-
-	_, newerr := svr.db.SporeSyringe.
-		Update().
-		AddGrainJar(grainJar).
-		Where(sporesyringe.ID(sporeSyringe.ID)).
-		Save(context.Background())
-	if newerr != nil {
-		ResponseJSON(c, http.StatusOK, 500, "create grain jar failed: "+newerr.Error(), nil)
 		return
 	}
 
@@ -207,4 +197,16 @@ func postSporeSyringe(c *gin.Context) {
 	resp.Supplier = sporeSyringe.Supplier
 
 	ResponseJSON(c, http.StatusOK, 200, "", resp)
+}
+
+func getSporeSyringe(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	sporeSyringe, err := svr.db.SporeSyringe.Query().
+		Where(sporesyringe.ID(id)).
+		First(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "Get spore syringe failed: "+err.Error(), nil)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, sporeSyringe)
 }

@@ -240,24 +240,24 @@ func SupplierContainsFold(v string) predicate.SporeSyringe {
 	return predicate.SporeSyringe(sql.FieldContainsFold(FieldSupplier, v))
 }
 
-// HasGrainJar applies the HasEdge predicate on the "grainJar" edge.
-func HasGrainJar() predicate.SporeSyringe {
+// HasGrainJars applies the HasEdge predicate on the "grainJars" edge.
+func HasGrainJars() predicate.SporeSyringe {
 	return predicate.SporeSyringe(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarTable, GrainJarColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarsTable, GrainJarsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasGrainJarWith applies the HasEdge predicate on the "grainJar" edge with a given conditions (other predicates).
-func HasGrainJarWith(preds ...predicate.GrainJar) predicate.SporeSyringe {
+// HasGrainJarsWith applies the HasEdge predicate on the "grainJars" edge with a given conditions (other predicates).
+func HasGrainJarsWith(preds ...predicate.GrainJar) predicate.SporeSyringe {
 	return predicate.SporeSyringe(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(GrainJarInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarTable, GrainJarColumn),
+			sqlgraph.To(GrainJarsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, GrainJarsTable, GrainJarsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

@@ -28,6 +28,6 @@ func (SporeSyringe) Fields() []ent.Field {
 // Edges of the SporeSyringe.
 func (SporeSyringe) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("grainJar", GrainJar.Type),
+		edge.To("grainJars", GrainJar.Type),
 	}
 }

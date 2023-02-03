@@ -17,17 +17,17 @@ const (
 	FieldSpecies = "species"
 	// FieldSupplier holds the string denoting the supplier field in the database.
 	FieldSupplier = "supplier"
-	// EdgeGrainJar holds the string denoting the grainjar edge name in mutations.
-	EdgeGrainJar = "grainJar"
+	// EdgeGrainJars holds the string denoting the grainjars edge name in mutations.
+	EdgeGrainJars = "grainJars"
 	// Table holds the table name of the sporesyringe in the database.
 	Table = "spore_syringes"
-	// GrainJarTable is the table that holds the grainJar relation/edge.
-	GrainJarTable = "grain_jars"
-	// GrainJarInverseTable is the table name for the GrainJar entity.
+	// GrainJarsTable is the table that holds the grainJars relation/edge.
+	GrainJarsTable = "grain_jars"
+	// GrainJarsInverseTable is the table name for the GrainJar entity.
 	// It exists in this package in order to avoid circular dependency with the "grainjar" package.
-	GrainJarInverseTable = "grain_jars"
-	// GrainJarColumn is the table column denoting the grainJar relation/edge.
-	GrainJarColumn = "spore_syringe_grain_jar"
+	GrainJarsInverseTable = "grain_jars"
+	// GrainJarsColumn is the table column denoting the grainJars relation/edge.
+	GrainJarsColumn = "spore_syringe_grain_jars"
 )
 
 // Columns holds all SQL columns for sporesyringe fields.
