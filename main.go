@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"example/myco-api/keys"
+	"example/myco-api/models"
 	"fmt"
 	"net/http"
 
@@ -86,6 +87,7 @@ func runHttpServer() {
 	router.GET("/api/grainjar/:id", getGrainJar)
 	router.POST("/api/grainjar", postGrainJar)
 
+	router.GET("/api/sporesyringes", getSporeSyringes)
 	router.POST("/api/sporesyringe", postSporeSyringe)
 	router.GET("/api/sporesyringe/:id", getSporeSyringe)
 	_ = router.Run("localhost:8080")
@@ -98,12 +100,18 @@ func main() {
 
 func getGrainJars(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "http://localhost:8081")
-	grainJar, err := svr.db.GrainJar.Query().All(context.Background())
+	grainJars, err := svr.db.GrainJar.Query().All(context.Background())
 	if err != nil {
 		ResponseJSON(c, http.StatusOK, 500, "Get grain jars failed: "+err.Error(), nil)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, grainJar)
+	var grainJarModels []models.GrainJarModel
+	for _, jar := range(grainJars) {
+		grainJarModels = append(grainJarModels, 
+			models.ToGrainJarModel(jar, 
+				jar.QuerySporeSyringes().FirstX(context.Background())))
+	}
+	c.IndentedJSON(http.StatusOK, grainJarModels)
 }
 
 func getGrainJar(c *gin.Context) {
@@ -115,7 +123,8 @@ func getGrainJar(c *gin.Context) {
 		ResponseJSON(c, http.StatusOK, 500, "Get grain jars failed: "+err.Error(), nil)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, grainJar)
+	sporeSyringe := grainJar.QuerySporeSyringes().FirstX(context.Background())
+	c.IndentedJSON(http.StatusOK, models.ToGrainJarModel(grainJar, sporeSyringe))
 }
 
 func postGrainJar(c *gin.Context) {
@@ -208,5 +217,18 @@ func getSporeSyringe(c *gin.Context) {
 		ResponseJSON(c, http.StatusOK, 500, "Get spore syringe failed: "+err.Error(), nil)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, sporeSyringe)
+	c.IndentedJSON(http.StatusOK, models.ToSporeSyringeModel(sporeSyringe))
+}
+
+func getSporeSyringes(c *gin.Context) {
+	sporeSyringes, err := svr.db.SporeSyringe.Query().All(context.Background())
+	if err != nil {
+		ResponseJSON(c, http.StatusOK, 500, "Get spore syringe failed: "+err.Error(), nil)
+		return
+	}
+	var sporeSyringeModels []models.SporeSyringeModel
+	for _, sporeSyringe := range(sporeSyringes) {
+		sporeSyringeModels = append(sporeSyringeModels, models.ToSporeSyringeModel(sporeSyringe))
+	}
+	c.IndentedJSON(http.StatusOK, sporeSyringeModels)
 }
