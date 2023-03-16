@@ -8,7 +8,7 @@ on:
         required: false
         description: "Cosign release version (e.g. 'v2.0.0')"
         type: string
-        default: "1.9.1"
+        default: "2.9.1"
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
