@@ -8,7 +8,7 @@ on:
         required: false
         description: "Cosign release version (e.g. 'v2.0.0')"
         type: string
-        default: "2.9.1"
+        default: ""
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
@@ -21,4 +21,4 @@ jobs:
           node-version: '14'
       - run: npm install -g bats
       - run: bats -v
-      - run: echo "Release ${{ startsWith(inputs.cosign_release, 1) && 1 || 0 }}"
+      - run: echo ${{ startsWith(inputs.cosign_release, "1.") && "1" || "0" }}
