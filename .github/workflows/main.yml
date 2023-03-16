@@ -21,4 +21,4 @@ jobs:
           node-version: '14'
       - run: npm install -g bats
       - run: bats -v
-      - run: echo ${{ startsWith(inputs.cosign_release, "1.") && "1" || "0" }}
+      - run: echo ${{ startsWith(inputs.cosign_release, "1.") && \\"1\\" || \\"0\\" }}
